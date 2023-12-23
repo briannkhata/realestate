@@ -16,6 +16,7 @@ export const signup = async (req, res, next) => {
         .json({
           message: "Username is already taken",
           error: "Bad Request",
+          success:false,
           statusCode: 400,
         });
     }
@@ -27,13 +28,21 @@ export const signup = async (req, res, next) => {
         .json({
           message: "Email is already registered",
           error: "Bad Request",
+          success:false,
           statusCode: 400,
         });
     }
 
     const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
-    res.status(201).json("User created successfully");
+    return res
+        .status(201)
+        .json({
+          message: "User created successfully",
+          error: "false",
+          success:true,
+          statusCode: 201,
+        });
   } catch (error) {
     next(error);
   }
