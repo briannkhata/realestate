@@ -11,11 +11,11 @@ export const updateUser = async (req, res, next) => {
     return next(errorHandler(401, "You can only update your own account"));
   try {
     if (req.body.password) {
-      req.body.password = bcryptjs.hashSync(req, body.password, 10);
+      req.body.password = bcryptjs.hashSync(req.body.password, 10);
     }
 
-    const updatedUser = await User.findOneAndUpdate(
-      req.body.id,
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
       {
         $set: {
           username: req.body.username,
@@ -27,7 +27,12 @@ export const updateUser = async (req, res, next) => {
       { new: true }
     );
 
-    const { password, ...others } = updatedUser._doc;
+    if (!updatedUser) {
+      return next(errorHandler(404, "User not found"));
+    }
+
+    const { password, ...rest } = updatedUser._doc;
+    res.status(200).json(rest);
   } catch (error) {
     next(error);
   }

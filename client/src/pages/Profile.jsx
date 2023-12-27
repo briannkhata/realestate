@@ -1,4 +1,3 @@
-import { useSelector } from "react-redux";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { app } from "../firebase";
@@ -10,6 +9,14 @@ import {
 } from "firebase/storage";
 import { FaSnapchat } from "react-icons/fa";
 
+import { useDispatch, useSelector } from "react-redux";
+
+import {
+  updateUserStart,
+  updateUserSuccess,
+  updateUserFailure,
+} from "../redux/user/userSlice";
+
 function Profile() {
   const { currentUser } = useSelector((state) => state.user);
   const fileRef = useRef(null);
@@ -19,8 +26,9 @@ function Profile() {
   const [loading, setLoading] = useState(false);
   const [filePerc, setFilePerc] = useState(0);
   const [fileUploadErr, setFileUploadErr] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
   const navigate = useNavigate();
-
+  const dispatch = useDispatch();
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -58,10 +66,35 @@ function Profile() {
     );
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      console.log(data);
+      if (data.success === false) {
+        dispatch(updateUserFailure(data.message));
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      setUpdateSuccess(true);
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+    }
+  };
+
   return (
     <div className="p-3 max-w-lg mx-auto">
       <h1 className="text-3xl font-semibold text-center">Profile</h1>
-      <form className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           onChange={(e) => setFile(e.target.files[0])}
           type="file"
@@ -92,7 +125,7 @@ function Profile() {
           placeholder="Username"
           className="border p-3 rounded-lg"
           id="username"
-          value={currentUser.username}
+          defaultValue={currentUser.username}
           onChange={handleChange}
         />
         <input
@@ -100,7 +133,7 @@ function Profile() {
           placeholder="Email"
           className="border p-3 rounded-lg"
           id="email"
-          value={currentUser.email}
+          defaultValue={currentUser.email}
           onChange={handleChange}
         />
         <input
@@ -108,7 +141,7 @@ function Profile() {
           placeholder="Password"
           className="border p-3 rounded-lg"
           id="password"
-          value={currentUser.password}
+          defaultValue={currentUser.password}
           onChange={handleChange}
         />
         <button
@@ -118,10 +151,15 @@ function Profile() {
           {loading ? "Loading" : "Update"}
         </button>
       </form>
+
       <div className="flex justify-between mt-5">
         <span className="text-red-700 cursor-pointer">Delete account</span>
         <span className="text-red-700 cursor-pointer">Sign out</span>
       </div>
+      <p className="text-red-700 mt-5">{error ? error : ""}</p>
+      <p className="text-green-700 mt-5">
+        {updateSuccess ? "User is updated successfully" : ""}
+      </p>
     </div>
   );
 }

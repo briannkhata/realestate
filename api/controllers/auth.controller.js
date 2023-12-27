@@ -49,6 +49,7 @@ export const signin = async (req, res, next) => {
     if (!validUser) {
       return res.status(404).json({
         message: "User not Found",
+        error: "User not Found",
         success: false,
       });
     }
@@ -57,6 +58,7 @@ export const signin = async (req, res, next) => {
     if (!validPassword) {
       return res.status(404).json({
         message: "Wrong username or password",
+        error: "Wrong username or password",
         success: false,
       });
     }
