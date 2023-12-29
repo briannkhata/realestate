@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { app } from "../firebase";
+import { app } from "../firebase.js";
 import {
   getDownloadURL,
   getStorage,
